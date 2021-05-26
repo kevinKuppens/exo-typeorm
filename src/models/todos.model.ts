@@ -15,7 +15,7 @@ export class TodosModel extends baseModel{
     public description !: string;
 
     @ManyToMany(() => CategoryModel, (categories) => categories.todo)
-    public categories !: string;
+    public categories !: CategoryModel[];
 
     @ManyToOne(()=>UsersModel, (user) => user.todos)
     public user !: UsersModel;
