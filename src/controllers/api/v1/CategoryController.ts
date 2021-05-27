@@ -1,7 +1,7 @@
-import { getModelForClass } from '@typegoose/typegoose';
-import { Request, response, Response } from 'express';
+
+import { Request, Response } from 'express';
 import { getRepository } from 'typeorm';
-import { Category } from '../../../models/Category';
+
 import { CategoryModel } from '../../../models/category.model';
 import { TodosModel } from '../../../models/todos.model';
 

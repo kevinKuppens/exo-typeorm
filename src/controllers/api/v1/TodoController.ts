@@ -33,6 +33,9 @@ class TodoController {
         const newTodo = new TodosModel();
         newTodo.title = req.body.title;
         newTodo.description = req.body.description;
+        if(user === undefined){
+            throw new Error('USER NOT FOUND');
+        }
         newTodo.user = user;
         newTodo.categories = categories;
     
@@ -46,7 +49,6 @@ class TodoController {
         const tokenUserId = verify(req.headers.authorization?.split(' ')[1], process.env.JWT_SECRET).data;
         const user =await userRepository.findOne({id : tokenUserId});
         const categories = await categoryRepository.find({id : req.body.categories});
-        console.log(categories);
         const updatedTodo = await todosRepository.preload({
             id,
             title : req.body.title,
