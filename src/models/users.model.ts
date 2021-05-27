@@ -8,6 +8,10 @@ export class UsersModel extends baseModel{
         nullable:false
     })
     public email!:string;
+    @Column('varchar', {
+        nullable:false
+    })
+    public password!:string;
     @OneToMany(() => TodosModel, (todo) => todo.user)
     public todos !: TodosModel;
 }

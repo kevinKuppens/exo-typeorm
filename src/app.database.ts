@@ -31,6 +31,7 @@ export class DatabasConnector{
                 password : 'test123*', 
                 host : 'localhost',
                 port : 3306,
+                name : 'default',
                 database : 'todos',
                 entities:[UsersModel, CategoryModel, TodosModel],
                 synchronize : true
@@ -38,6 +39,8 @@ export class DatabasConnector{
 
             // eslint-disable-next-line no-console
             console.log('Connexion is set');
+
+            return connexion;
         }catch(e){
             // eslint-disable-next-line no-console
             console.log(e);

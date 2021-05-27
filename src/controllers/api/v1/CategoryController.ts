@@ -1,27 +1,57 @@
 import { getModelForClass } from '@typegoose/typegoose';
 import { Request, response, Response } from 'express';
+import { getRepository } from 'typeorm';
 import { Category } from '../../../models/Category';
+import { CategoryModel } from '../../../models/category.model';
+import { TodosModel } from '../../../models/todos.model';
 
 class CategoryController {
-    static model = getModelForClass(Category);
+    // static model = getModelForClass(Category);
     static findAll= async (req:Request, res:Response) => {
-       return res.json({categories:await CategoryController.model.find()});
+        const categoryRepository = getRepository(CategoryModel);
+        
+       return res.json({categories:await categoryRepository.find()});
     }
 
     static create = async(req:Request, res:Response) => {
-        return res.json(await CategoryController.model.create(req.body));
+        const categoryRepository = getRepository(CategoryModel);
+        const todosRepository = getRepository(TodosModel);
+        const todos = await todosRepository.find(req.body.todo);
+      
+        const newCategory = new CategoryModel();
+        newCategory.title = req.body.title;
+        newCategory.todo = todos;
+        return res.json(await categoryRepository.save(newCategory));
     }
     static update = async(req:Request, res:Response) => {
-        const {id} = req.params;
-        return res.json(await CategoryController.model.updateOne({_id:id}, req.body));
+        const id = parseInt(req.params.id);
+        const categoryRepository = getRepository(CategoryModel);
+        const todosRepository = getRepository(TodosModel);
+        const todos = await todosRepository.find(req.body.todo);
+        const updatedCategory = await categoryRepository.preload({
+            id, 
+            title : req.body.title,
+            todo : todos
+        });
+        if(updatedCategory === undefined){
+            throw new Error('CATEGORY NOT FOUND');
+        }
+        return res.json(await categoryRepository.save(updatedCategory));
     }
     static delete = async(req:Request, res:Response) => {
-        const {id} = req.params;
-        return res.json(await CategoryController.model.deleteOne({_id:id}));
+        const categoryRepository = getRepository(CategoryModel);
+
+        const id = parseInt(req.params.id);
+        const category =await categoryRepository.findOne(id);
+        if(category === undefined){
+            throw new Error('CATEGORY NOT FOUND');
+        }
+        return res.json(await categoryRepository.remove(category));
     }
     static findById = async(req:Request, res:Response) => {
-        const {id} = req.params;
-        return res.json(await CategoryController.model.findOne({_id:id}));
+        const id = parseInt(req.params.id);
+        const categoryRepository = getRepository(CategoryModel);
+        return res.json(await categoryRepository.findOne(id));
     }
 }
 
