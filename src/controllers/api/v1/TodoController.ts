@@ -13,10 +13,16 @@ class TodoController {
     static findAll= async (req:Request, res:Response) => {
         const userRepository = getRepository(UsersModel);
         const todosRepository = getRepository(TodosModel);
-        const tokenUserId = verify(req.headers.authorization?.split(' ')[1], process.env.JWT_SECRET).data;
-        const user =await userRepository.findOne({id : tokenUserId});
+        const {data} = verify(
+            req.headers.authorization ? req.headers.authorization .split(' ')[1] : 'No Auth', 
+            process.env.JWT_SECRET ?? 'Potato') as Record<string, any>;
+        const user =await userRepository.findOne({id : data});
         if(req.query.filterByCategory){
-            return res.json({todos:await todosRepository.find({where : {user}, order: {categories : 'ASC'}})});
+            return res.json({todos:await todosRepository.find({
+                relations : ['user', 'categories'],
+                where : {'user.id' : user?.id,
+                            'categories.name' : req.query.filterByCategory}, 
+                order: {categories : 'ASC'}})});
         }
        return res.json({todos:await todosRepository.find({user})});
     }
@@ -27,8 +33,10 @@ class TodoController {
         const todosRepository = getRepository(TodosModel);
         const categoryRepository = getRepository(CategoryModel);
         const categories = await categoryRepository.find({id : req.body.categories});
-        const tokenUserId = verify(req.headers.authorization?.split(' ')[1], process.env.JWT_SECRET).data;
-        const user =await userRepository.findOne({id : tokenUserId});
+        const {data} = verify(
+            req.headers.authorization ? req.headers.authorization.split(' ')[1] : 'No Atuh', 
+            process.env.JWT_SECRET ?? 'Potato') as Record<string, any>;
+        const user =await userRepository.findOne({id : data});
         req.body.user=user;
         const newTodo = new TodosModel();
         newTodo.title = req.body.title;
@@ -46,8 +54,10 @@ class TodoController {
         const userRepository = getRepository(UsersModel);
         const categoryRepository = getRepository(CategoryModel);
         const id = parseInt(req.params.id);
-        const tokenUserId = verify(req.headers.authorization?.split(' ')[1], process.env.JWT_SECRET).data;
-        const user =await userRepository.findOne({id : tokenUserId});
+        const {data} = verify(
+            req.headers.authorization ? req.headers.authorization.split(' ')[1] : 'No Atuh', 
+        process.env.JWT_SECRET ?? 'Potato') as Record<string, any>;
+        const user =await userRepository.findOne({id : data});
         const categories = await categoryRepository.find({id : req.body.categories});
         const updatedTodo = await todosRepository.preload({
             id,
@@ -56,7 +66,7 @@ class TodoController {
             categories,
             user
         });
-        if(user === undefined){
+        if(updatedTodo === undefined){
             throw new Error('TODOS NOT FOUND');
         }
         return res.json(await todosRepository.save(updatedTodo));

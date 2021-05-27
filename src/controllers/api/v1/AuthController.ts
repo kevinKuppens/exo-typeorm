@@ -2,14 +2,16 @@ import { NextFunction, Request, Response } from 'express';
 import {sign, verify} from 'jsonwebtoken';
 import { getRepository } from 'typeorm';
 import { UsersModel } from '../../../models/users.model';
+import Bcrypt from 'bcrypt';
 
 class AuthController {
     
-    static login = async (req:Request, res:Response, next:NextFunction)=>{
+    static login = async (req:Request, res:Response)=>{
         const userRepository = getRepository(UsersModel);
         const user = await userRepository.findOne({email:req.body.email});
+        // console.log(user);
         if(user){
-            if(user.password === req.body.password){
+            if(await Bcrypt.compare(req.body.password, user.password)){
                 // eslint-disable-next-line no-console
                 console.log(user);
                 const jwtToken = await sign({
@@ -31,8 +33,8 @@ class AuthController {
     
         try{
             const jwtToken = req.headers.authorization?.split(' ')[1] || 'notoken';
-            const userId = await verify(jwtToken, process.env.JWT_SECRET);
-            next();
+            const userId = await verify(jwtToken, process.env.JWT_SECRET ?? 'yupikaye');
+            next(userId);
         }catch(e){
             const err = new Error('Bad token !!');
             err.status = 401;
@@ -46,6 +48,7 @@ class AuthController {
     
         try{
             const jwtToken = req.headers.authorization?.split(' ')[1] || 'notoken';
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const userId = await verify(jwtToken, process.env.JWT_SECRET || '');
             return res.json({token:{isValid:true}});
         }catch(e){
